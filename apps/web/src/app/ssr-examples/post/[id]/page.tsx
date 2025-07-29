@@ -1,4 +1,4 @@
-import { serverTrpcClient } from "@/utils/trpc-server";
+import { trpcCaller } from "@/utils/trpc-server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -14,7 +14,8 @@ export default async function PostDetailPage({ params }: Props) {
 
   try {
     // Server-side data fetching with proper error handling
-    const post = await serverTrpcClient.posts.byId.query({ id });
+    const caller = await trpcCaller();
+    const post = await caller.posts.byId({ id });
 
     return (
       <div className="max-w-3xl mx-auto p-8 text-gray-900">

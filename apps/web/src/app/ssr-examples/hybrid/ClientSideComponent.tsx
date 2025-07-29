@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc-client";
 
 type Post = {
   id: string;
@@ -20,7 +20,7 @@ export default function ClientSideComponent({ initialPosts }: Props) {
   const [selectedAuthor, setSelectedAuthor] = useState<string>("");
   const [showRealTime, setShowRealTime] = useState(false);
 
-  // Client-side query for filtering by author (only runs when author is selected)
+  const trpc = useTRPC();
   const filteredPostsQuery = useQuery({
     ...trpc.posts.byAuthor.queryOptions({
       author: selectedAuthor,

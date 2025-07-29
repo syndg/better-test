@@ -1,4 +1,4 @@
-import { serverTrpcClient } from "@/utils/trpc-server";
+import { trpcCaller } from "@/utils/trpc-server";
 import Link from "next/link";
 import ClientSideComponent from "./ClientSideComponent";
 
@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 
 export default async function HybridPage() {
   // SSR: Fetch initial data on the server
-  const initialPosts = await serverTrpcClient.posts.list.query();
-  const serverTime = await serverTrpcClient.serverTime.query();
+  const caller = await trpcCaller();
+  const initialPosts = await caller.posts.list();
+  const serverTime = await caller.serverTime();
 
   return (
     <div className="max-w-4xl mx-auto p-8 text-gray-900">

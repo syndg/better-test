@@ -1,64 +1,22 @@
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import type { AppRouter } from "../../../server/src/routers";
-import superjson from "superjson";
-import { headers, cookies } from "next/headers";
+// server-only
+import "server-only";
+import { cache } from "react";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { makeQueryClient } from "./query-client";
+import { appRouter } from "@server/routers";
+import { getServerSession } from "./auth-server";
 
-// Create a server-side tRPC client with authentication support
-export async function createAuthenticatedServerTrpcClient() {
-  const headersList = await headers();
-  const cookieStore = await cookies();
+export const getQueryClient = cache(makeQueryClient);
 
-  return createTRPCClient<AppRouter>({
-    links: [
-      httpBatchLink({
-        url: `${process.env.NEXT_PUBLIC_SERVER_URL}/trpc`,
-        transformer: superjson,
-        fetch(url, options) {
-          return fetch(url, {
-            ...options,
-            credentials: "include",
-            headers: {
-              ...options?.headers,
-              // Forward cookies for authentication
-              Cookie: cookieStore.toString(),
-              // Forward other relevant headers
-              "User-Agent": headersList.get("user-agent") || "",
-              Accept: headersList.get("accept") || "application/json",
-            },
-          });
-        },
-      }),
-    ],
-  });
-}
-
-// Basic server-side tRPC client (for public routes)
-export const serverTrpcClient = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: `${process.env.NEXT_PUBLIC_SERVER_URL}/trpc`,
-      transformer: superjson,
-      fetch(url, options) {
-        return fetch(url, {
-          ...options,
-          credentials: "include",
-        });
-      },
-    }),
-  ],
+export const trpc = createTRPCOptionsProxy({
+  router: appRouter,
+  queryClient: getQueryClient,
+  ctx: async () => ({
+    session: await getServerSession(),
+  }),
 });
 
-// Helper function to create a server context for tRPC calls
-export async function createServerContext(headers?: Headers) {
-  return {
-    headers: headers || new Headers(),
-  };
-}
-
-/**
- * Get an authenticated server tRPC client
- * Use this when you need to call protected procedures from server components
- */
-export async function getAuthenticatedServerClient() {
-  return await createAuthenticatedServerTrpcClient();
-}
+// Convenience caller for plain async/await usage in RSCs
+export const trpcCaller = cache(async () =>
+  appRouter.createCaller({ session: await getServerSession() })
+);

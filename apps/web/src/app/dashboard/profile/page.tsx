@@ -1,5 +1,5 @@
 import { requireServerAuth } from "@/utils/auth-server";
-import { getAuthenticatedServerClient } from "@/utils/trpc-server";
+import { trpcCaller } from "@/utils/trpc-server";
 import Link from "next/link";
 
 // Force dynamic rendering for this route since it uses cookies() via auth functions
@@ -9,11 +9,8 @@ export default async function ProfilePage() {
   // Server-side authentication - redirects if not authenticated
   const authData = await requireServerAuth();
 
-  // Get authenticated tRPC client
-  const authenticatedClient = await getAuthenticatedServerClient();
-
   // Fetch additional protected data
-  const privateData = await authenticatedClient.privateData.query();
+  const privateData = await (await trpcCaller()).privateData();
 
   return (
     <div className="max-w-3xl mx-auto p-8 text-gray-900">

@@ -1,4 +1,4 @@
-import { serverTrpcClient } from "@/utils/trpc-server";
+import { trpcCaller } from "@/utils/trpc-server";
 import Link from "next/link";
 
 // Force dynamic rendering to prevent build-time tRPC call failures
@@ -7,9 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function SSRExamplesPage() {
   // This runs on the server during render time
   // The data will be available immediately when the page loads
+  const caller = await trpcCaller();
   const [posts, serverTime] = await Promise.all([
-    serverTrpcClient.posts.list.query(),
-    serverTrpcClient.serverTime.query(),
+    caller.posts.list(),
+    caller.serverTime(),
   ]);
 
   return (
