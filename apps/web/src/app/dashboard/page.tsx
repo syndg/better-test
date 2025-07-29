@@ -2,14 +2,8 @@ import { requireServerAuth } from "@/utils/auth-server";
 import { trpcCaller } from "@/utils/trpc-server";
 import Link from "next/link";
 
-// Force dynamic rendering for this route since it uses cookies() via auth functions
-export const dynamic = "force-dynamic";
-
 export default async function Dashboard() {
-  // Server-side authentication check - redirects to login if not authenticated
   const authData = await requireServerAuth();
-
-  // Fetch protected data on the server (no loading states needed!)
   const privateData = await (await trpcCaller()).privateData();
 
   return (

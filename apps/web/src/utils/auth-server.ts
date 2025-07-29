@@ -1,14 +1,17 @@
-// server-only
 import "server-only";
 import { cache } from "react";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@server/lib/auth";
 import type { Session } from "@server/lib/auth-types";
 
 export const getServerSession = cache(async (): Promise<Session | null> => {
-  // direct in-process call, no extra HTTP request
-  return auth.api.getSession({ headers: await headers() });
+  const [hdrsRaw, cookieStore] = await Promise.all([headers(), cookies()]);
+  const hdrs = new Headers(hdrsRaw);
+  const rawCookie = cookieStore.toString();
+  if (rawCookie) hdrs.set("cookie", rawCookie);
+
+  return auth.api.getSession({ headers: hdrs });
 });
 
 export async function requireServerAuth(
@@ -19,6 +22,4 @@ export async function requireServerAuth(
   return session;
 }
 
-export async function getOptionalServerAuth(): Promise<Session | null> {
-  return getServerSession();
-}
+export const getOptionalServerAuth = getServerSession;
